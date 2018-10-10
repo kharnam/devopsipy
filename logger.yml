@@ -1,0 +1,62 @@
+# Module to centralize logger configuration
+
+version: 1
+disable_existing_loggers: False
+
+formatters:
+    default:
+        format: "%(asctime)s - %(name)s - [%(levelname)8s] - %(message)s"
+        datefmt: '%Y-%m-%d %H:%M:%S'
+
+    detailed:
+        format: '%(asctime)s - %(levelname)s - File: %(filename)s - %(funcName)s() - Line: %(lineno)d -  %(message)s'
+        datefmt: '%Y-%m-%d %H:%M:%S'
+
+handlers:
+    console:
+        class: logger.ColorizingStreamHandler
+        level: INFO
+        formatter: default
+        stream: ext://sys.stdout
+
+    info_file_handler:
+        class: logger.FileHandlerInfo
+        level: INFO
+        formatter: default
+        maxBytes: 10485760 # 10MB
+        backupCount: 10
+
+    error_file_handler:
+        class: logger.FileHandlerError
+        level: ERROR
+        formatter: default
+        maxBytes: 10485760 # 10MB
+        backupCount: 10
+
+    debug_file_handler:
+        class: logger.FileHandlerDebug
+        level: DEBUG
+        formatter: default
+        maxBytes: 10485760 # 10MB
+        backupCount: 10
+
+loggers:
+    info:
+        level: INFO
+        handlers: [console, info_file_handler, error_file_handler, debug_file_handler]
+        propagate: true
+
+    debug:
+        level: DEBUG
+        handlers: [debug_file_handler]
+        propagate: true
+
+    error:
+        level: ERROR
+        handlers: [error_file_handler]
+        propagate: true
+
+root:
+    level: NOTSET
+    handlers: [console, info_file_handler, error_file_handler, debug_file_handler]
+    propagate: true
