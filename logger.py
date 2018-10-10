@@ -3,13 +3,16 @@ Module to implement logging facility for Pywork framework
 
 Usage:
 In __main__:
-log = logger.set_logger('TEST')
+log = logger.set_logger('<logger name>')
 
 In modules:
 import logging
 log = logging.getLogger(__name__)
 
 """
+
+__author__ = 'sergey kharnam'
+
 
 import os
 import logger_constants as lc
@@ -27,6 +30,8 @@ log_file_info = str()
 log_file_error = str()
 log_file_debug = str()
 
+
+# TODO: implement log level Silent
 
 def set_logger(
         lgr_name,
@@ -76,10 +81,10 @@ class FileHandlerDebug(RotatingFileHandler):
     Output to log file only
     """
 
-    def __init__(self, maxBytes, backupCount):
+    def __init__(self, max_bytes, backup_count):
         super().__init__(filename=log_file_debug,
-                         maxBytes=maxBytes,
-                         backupCount=backupCount)
+                         maxBytes=max_bytes,
+                         backupCount=backup_count)
 
 
 class FileHandlerInfo(RotatingFileHandler):
@@ -89,10 +94,10 @@ class FileHandlerInfo(RotatingFileHandler):
     Output to console and to log files
     """
 
-    def __init__(self, maxBytes, backupCount):
+    def __init__(self, max_bytes, backup_count):
         super().__init__(filename=log_file_info,
-                         maxBytes=maxBytes,
-                         backupCount=backupCount)
+                         maxBytes=max_bytes,
+                         backupCount=backup_count)
 
 
 class FileHandlerError(RotatingFileHandler):
@@ -102,13 +107,16 @@ class FileHandlerError(RotatingFileHandler):
     Output to console and to log files
     """
 
-    def __init__(self, maxBytes, backupCount):
+    def __init__(self, max_bytes, backup_count):
         super().__init__(filename=log_file_error,
-                         maxBytes=maxBytes,
-                         backupCount=backupCount)
+                         maxBytes=max_bytes,
+                         backupCount=backup_count)
 
 
 class ColorizingStreamHandler(logging.StreamHandler):
+    """
+    Colorize TTY output
+    """
     # color names to indices
     color_map = {
         'black': 0,

@@ -1,6 +1,7 @@
 """
 Module to contain logger related constants
 """
+__author__ = 'sergey kharnam'
 
 LOG_DIR_BASE = '/tmp/logs/'
 LOG_FILE_EXTENSION_INFO = '.log'

@@ -2,7 +2,6 @@
 
 __author__ = 'sergey kharnam'
 
-# Imports
 import os
 import sys
 
