@@ -23,22 +23,22 @@ handlers:
         class: logger.FileHandlerInfo
         level: INFO
         formatter: default
-        maxBytes: 10485760 # 10MB
-        backupCount: 10
+        max_bytes: 10485760 # 10MB
+        backup_count: 10
 
     error_file_handler:
         class: logger.FileHandlerError
         level: ERROR
         formatter: default
-        maxBytes: 10485760 # 10MB
-        backupCount: 10
+        max_bytes: 10485760 # 10MB
+        backup_count: 10
 
     debug_file_handler:
         class: logger.FileHandlerDebug
         level: DEBUG
         formatter: default
-        maxBytes: 10485760 # 10MB
-        backupCount: 10
+        max_bytes: 10485760 # 10MB
+        backup_count: 10
 
 loggers:
     info:
