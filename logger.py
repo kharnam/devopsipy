@@ -22,7 +22,7 @@ from logging.handlers import RotatingFileHandler
 import time
 import yaml
 import ctypes
-import pywork_utils as utils
+import pywork_utils as pu
 
 log_dir_path = str()
 logger_name = str()
@@ -49,15 +49,15 @@ def set_logger(
     """
     # handling paths and files
     _set_log_file_names_and_paths(lgr_name=lgr_name)
-    __path = default_path
-    __value = os.getenv(env_key, None)
+    path = default_path
+    value = os.getenv(env_key, None)
 
-    if __value:
-        __path = __value
-    if os.path.exists(__path):
-        with open(__path, 'rt') as f:
-            __config = yaml.safe_load(f.read())
-        logging.config.dictConfig(__config)
+    if value:
+        path = value
+    if os.path.exists(path):
+        with open(path, 'rt') as f:
+            config = yaml.safe_load(f.read())
+        logging.config.dictConfig(config)
     else:
         logging.basicConfig(level=default_level)
 
@@ -65,9 +65,9 @@ def set_logger(
 
 
 def formatter_off():
-    frmttr = logging.Formatter(fmt='%(message)s', style='%', datefmt='%Y-%m-%d %H:%M:%S')
+    f = logging.Formatter(fmt='%(message)s', style='%', datefmt='%Y-%m-%d %H:%M:%S')
     for h in logging.getLogger().handlers:
-        h.setFormatter(frmttr)
+        h.setFormatter(f)
 
 
 def _set_log_file_names_and_paths(lgr_name):
@@ -82,8 +82,8 @@ def _set_log_file_names_and_paths(lgr_name):
     global log_file_debug
     log_file_debug = log_dir_path + '/' + logger_name + lc.LOG_FILE_EXTENSION_DEBUG
 
-    utils.create_dir(lc.LOG_DIR_BASE)
-    utils.create_dir(log_dir_path)
+    pu.create_dir(lc.LOG_DIR_BASE)
+    pu.create_dir(log_dir_path)
 
 
 class FileHandlerDebug(RotatingFileHandler):
