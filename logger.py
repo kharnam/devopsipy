@@ -22,7 +22,7 @@ from logging.handlers import RotatingFileHandler
 import time
 import yaml
 import ctypes
-import pywork_utils as utils
+import pywork_utils as pu
 
 log_dir_path = str()
 logger_name = str()
@@ -31,7 +31,8 @@ log_file_error = str()
 log_file_debug = str()
 
 
-# TODO: implement log level Silent
+# -----------------------------------------
+# Logger setup
 
 def set_logger(
         lgr_name,
@@ -49,42 +50,55 @@ def set_logger(
     """
     # handling paths and files
     _set_log_file_names_and_paths(lgr_name=lgr_name)
-    __path = default_path
-    __value = os.getenv(env_key, None)
+    path = default_path
+    value = os.getenv(env_key, None)
 
-    if __value:
-        __path = __value
-    if os.path.exists(__path):
-        with open(__path, 'rt') as f:
-            __config = yaml.safe_load(f.read())
-        logging.config.dictConfig(__config)
+    if value:
+        path = value
+    if os.path.exists(path):
+        with open(path, 'rt') as f:
+            config = yaml.safe_load(f.read())
+        logging.config.dictConfig(config)
     else:
         logging.basicConfig(level=default_level)
 
     return logging.getLogger(lgr_name)
 
 
+# TODO: implement formatter_on() to back to default (or arbitrary) formatter
 def formatter_off():
-    frmttr = logging.Formatter(fmt='%(message)s', style='%', datefmt='%Y-%m-%d %H:%M:%S')
+    f = logging.Formatter(fmt='%(message)s', style='%', datefmt='%Y-%m-%d %H:%M:%S')
     for h in logging.getLogger().handlers:
-        h.setFormatter(frmttr)
+        h.setFormatter(f)
 
 
 def _set_log_file_names_and_paths(lgr_name):
+    symlink_dict = dict()
     global logger_name
     logger_name = lgr_name + '_' + time.strftime("%Y%m%d_%H%M%S")
     global log_dir_path
     log_dir_path = lc.LOG_DIR_BASE + logger_name
     global log_file_info
     log_file_info = log_dir_path + '/' + logger_name + lc.LOG_FILE_EXTENSION_INFO
+    symlink_dict[lc.LOG_FILE_SYMLINK_INFO] = log_file_info
     global log_file_error
     log_file_error = log_dir_path + '/' + logger_name + lc.LOG_FILE_EXTENSION_ERROR
+    symlink_dict[lc.LOG_FILE_SYMLINK_ERROR] = log_file_error
     global log_file_debug
     log_file_debug = log_dir_path + '/' + logger_name + lc.LOG_FILE_EXTENSION_DEBUG
+    symlink_dict[lc.LOG_FILE_SYMLINK_DEBUG] = log_file_debug
 
-    utils.create_dir(lc.LOG_DIR_BASE)
-    utils.create_dir(log_dir_path)
+    pu.create_dir(log_dir_path)
+    pu.create_symlinks_to_files(**symlink_dict)
 
+
+
+
+
+
+
+# -----------------------------------------
+# Log handlers
 
 class FileHandlerDebug(RotatingFileHandler):
     """
