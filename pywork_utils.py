@@ -1,6 +1,8 @@
 """
 Module to contain auxiliary functionality
 """
+import yaml
+
 __author__ = 'sergey kharnam'
 
 import os
@@ -8,9 +10,25 @@ import inspect
 import pickle
 import random
 import string
+import pywork_exceptions as pe
 
 import logging
 log = logging.getLogger(__name__)
+
+
+def yaml_to_dic(path):
+    """
+    Read yaml from file and return dict
+    :param file:
+    :return: dict
+    """
+    if os.path.exists(path):
+        with open(path, 'rt') as f:
+            log.debug('reading yaml file --> {}'.format(path))
+            log.debug('data from yaml file:\n{}'.format(yaml.safe_load(f.read())))
+            return yaml.safe_load(f.read())
+    else:
+        raise pe.PyworkException('YAML file not found in path < {} >'.format(path))
 
 
 def create_dir(dir_path):
@@ -21,12 +39,12 @@ def create_dir(dir_path):
     :return:
     """
     if not os.path.exists(dir_path):
-        logging.debug('Directory < {0} > is not existing. Creating...'.format(dir_path))
+        log.debug('Directory < {0} > is not existing. Creating...'.format(dir_path))
         os.mkdir(dir_path)
         if not is_dir_exist(dir_path):
             raise Exception('Directory < {0} > creation failed!'.format(dir_path))
     else:
-        logging.debug('Directory < {0} > is already existed. Doing nothing.'.format(dir_path))
+        log.debug('Directory < {0} > is already existed. Doing nothing.'.format(dir_path))
 
 
 def is_dir_exist(dir_path):
@@ -37,10 +55,10 @@ def is_dir_exist(dir_path):
     :return: True if exist, False otherwise
     """
     if os.path.isdir(dir_path):
-        logging.debug('directory < {0} > is found'.format(dir_path))
+        log.debug('directory < {0} > is found'.format(dir_path))
         return True
     else:
-        logging.debug('directory < {0} > is NOT found'.format(dir_path))
+        log.debug('directory < {0} > is NOT found'.format(dir_path))
         return False
 
 
@@ -94,7 +112,6 @@ def get_random_string(length=6):
 
 
 def set_env_vars(**varibs):
-    log.info('Setting environment variables...')
     if isinstance(varibs, dict):
         for var_name, var_value in varibs.items():
             os.environ[var_name] = var_value
