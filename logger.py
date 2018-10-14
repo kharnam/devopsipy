@@ -40,6 +40,12 @@ def set_logger(
         env_key='LOG_CFG'):
     """
     Setup logging configuration
+
+    :param lgr_name: logger name
+    :param default_path: path to logger conf file
+    :param default_level: default log level
+    :param env_key: set logger conf from env var
+    :return: configured logger
     """
     # handling paths and files
     _set_log_file_names_and_paths(lgr_name=lgr_name)
@@ -56,6 +62,12 @@ def set_logger(
         logging.basicConfig(level=default_level)
 
     return logging.getLogger(lgr_name)
+
+
+def formatter_off():
+    frmttr = logging.Formatter(fmt='%(message)s', style='%', datefmt='%Y-%m-%d %H:%M:%S')
+    for h in logging.getLogger().handlers:
+        h.setFormatter(frmttr)
 
 
 def _set_log_file_names_and_paths(lgr_name):
