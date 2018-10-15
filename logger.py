@@ -15,7 +15,7 @@ __author__ = 'sergey kharnam'
 
 
 import os
-import logger_constants as lc
+import logger_const as lc
 import logging
 import logging.config
 from logging.handlers import RotatingFileHandler
