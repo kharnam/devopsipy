@@ -92,11 +92,6 @@ def _set_log_file_names_and_paths(lgr_name):
     pu.create_symlinks_to_files(**symlink_dict)
 
 
-
-
-
-
-
 # -----------------------------------------
 # Log handlers
 
