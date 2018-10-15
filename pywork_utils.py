@@ -10,10 +10,25 @@ import inspect
 import pickle
 import random
 import string
+from pathlib import Path
 import pywork_exceptions as pe
 
 import logging
 log = logging.getLogger(__name__)
+
+
+def create_symlinks_to_files(**data):
+    """
+    Create symlinks to files.
+
+    :param data: {link1: file1, link2:file,...}
+    """
+    for link, file in data.items():
+        if os.path.isfile(link):
+            logging.debug('old symlink < {} > found. removing...'.format(file))
+            os.remove(link)
+        logging.debug('creating new symlink < {} > --> < {} >'.format(link, file))
+        os.symlink(file, link)
 
 
 def yaml_to_dic(path):
@@ -39,12 +54,12 @@ def create_dir(dir_path):
     :return:
     """
     if not os.path.exists(dir_path):
-        log.debug('Directory < {0} > is not existing. Creating...'.format(dir_path))
-        os.mkdir(dir_path)
+        log.debug('directory < {} > is not existing. creating...'.format(dir_path))
+        Path(dir_path).mkdir(parents=True, exist_ok=True)
         if not is_dir_exist(dir_path):
-            raise Exception('Directory < {0} > creation failed!'.format(dir_path))
+            raise Exception('directory < {} > creation failed!'.format(dir_path))
     else:
-        log.debug('Directory < {0} > is already existed. Doing nothing.'.format(dir_path))
+        log.debug('directory < {} > is already exist. doing nothing.'.format(dir_path))
 
 
 def is_dir_exist(dir_path):
