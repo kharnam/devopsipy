@@ -16,3 +16,13 @@ class PyworkException(Exception):
         super().__init__(message)
         self.errors = errors
         log.exception(message)
+
+
+class HostConnectivityError(Exception):
+    """
+    Host connectivity exception
+    """
+    def __init__(self, message, errors=None):
+        super().__init__(message)
+        self.errors = errors
+        log.exception(message)
