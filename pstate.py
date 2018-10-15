@@ -30,20 +30,14 @@ class Pstate(object):
         :returns: None
         """
         self.hostname = hostname
+        self.ipaddr = ''
         self.rc = rc
-        self.pid = None
-        self.epoch = None
+        self.pid = str()
+        self.epoch = int()
         self.runtime = 0.0
         self.cmd = str()
         self.stdout = list()
         self.stderr = list()
-
-    @property
-    def success(self):
-        """
-        Getter property returning boolean value indicating success
-        """
-        return not self.rc
 
     def __repr__(self):
         """
@@ -60,13 +54,13 @@ class Pstate(object):
         :rtype: str
         """
         pstate_data = [
-            "CMD: " + self.cmd,
-            "RC: " + str(self.rc),
-            "EPOCH: " + str(self.epoch),
-            "PID: " + str(self.pid),
-            "HOST: " + self.hostname,
-            "RUNTIME: " + str(self.runtime),
-            "STDOUT: " + str(self.stdout),
-            "STDERR: " + str(self.stderr)
+            'CMD: ' + self.cmd,
+            'RC: ' + str(self.rc),
+            'EPOCH: ' + str(self.epoch),
+            'HOST: ' + self.hostname,
+            'IPADDR: ' + self.ipaddr,
+            'RUNTIME: ' + str(self.runtime),
+            'STDOUT: ' + str(self.stdout),
+            'STDERR: ' + str(self.stderr)
         ]
         return '\n' + '\n'.join(pstate_data) + '\n'
