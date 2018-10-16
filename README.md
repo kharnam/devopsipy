@@ -1,7 +1,7 @@
 ## DevOpsiPy Project
 
 #### Abstract  
-Project aim to create generic, DevOps oriented framework in Python 3
+Project aims to create generic, DevOps oriented framework in Python 3
 
 ---
 
@@ -65,13 +65,13 @@ Fully functional pre-configured logging facility
     * debug_file_handler -- level DEBUG, separate log file with rotation
 * Creates separate folder under '/tmp/logs' on every init and creates symlinks to the latest log files
 ```bash
-kharnam/tmp/logs# ls -ltr
+/tmp/logs# ls -ltr
 lrwxr-xr-x  1 kharnam  wheel    76B 15 Oct 22:17 latest.info -> /tmp/logs/HostBaseTest_20181015_221711/HostBaseTest_20181015_221711.info.log
 lrwxr-xr-x  1 kharnam  wheel    77B 15 Oct 22:17 latest.error -> /tmp/logs/HostBaseTest_20181015_221711/HostBaseTest_20181015_221711.error.log
 lrwxr-xr-x  1 kharnam  wheel    77B 15 Oct 22:17 latest.debug -> /tmp/logs/HostBaseTest_20181015_221711/HostBaseTest_20181015_221711.debug.log
 drwxr-xr-x  5 kharnam  wheel   160B 15 Oct 22:17 HostBaseTest_20181015_221711
 
-kharnam/tmp/logs# ll HostBaseTest_20181015_221711
+/tmp/logs# ll HostBaseTest_20181015_221711
 -rw-r--r--  1 kharnam  wheel    12K 15 Oct 22:17 HostBaseTest_20181015_221711.debug.log
 -rw-r--r--  1 kharnam  wheel   2.6K 15 Oct 22:17 HostBaseTest_20181015_221711.info.log
 -rw-r--r--  1 kharnam  wheel     0B 15 Oct 22:17 HostBaseTest_20181015_221711.error.log
