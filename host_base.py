@@ -2,6 +2,7 @@
 Module to contain Base Host functionality
 """
 import calendar
+import re
 import sys
 
 __author__ = 'sergey kharnam'
@@ -9,21 +10,36 @@ __author__ = 'sergey kharnam'
 import logging
 log = logging.getLogger(__name__)
 
-import pstate
+# stdlib
 import time
 import os
 import socket
 import platform
 import subprocess
+import ipaddress
 from pathlib import Path
+
+# PyPy
+from retry import retry
+import paramiko as pm
+
+# Pywork
+import pstate
 import pywork_exceptions as pe
 import pywork_decorators as pd
 import host_base_const as hbc
-import paramiko as pm
 
 
 class HostBase(object):
-    """Class to represent basic Host functionality"""
+    """
+    Class to represent basic Host functionality
+
+    :param hostname: localhost, FQDN or IPv4/IPv6
+    :param ip_family: 4 for IPv4 or 6 for IPv6
+    :param ssh_user: ssh user
+    :param ssh_pass: ssh password
+    :param ssh_key_file: ssh private key file path
+    """
 
     def __init__(self,
                  hostname='localhost',
@@ -36,6 +52,7 @@ class HostBase(object):
 
         self._hostname = hostname  # will become DNS resolved hostname
         self._ipaddr = hostname  # will become the actual ip after resolution
+        self._ipaddr_version = None
         self._is_localhost = None
         self._ssh_pass = ssh_pass
         self._ssh_user = ssh_user
@@ -51,20 +68,24 @@ class HostBase(object):
     # Host State Functions
 
     def __str__(self):
-        """Prints hostname of class object as string
+        """
+        Prints hostname of class object as string
 
-           :Parameters: none
-           :returns: string
+        :returns: string
         """
         return self._hostname
 
     def __repr__(self):
-        """repr return hostname of class object as string
-
-           :Parameters: none
-           :returns: string
         """
-        return self._hostname
+        repr return HostBase current State
+
+        :returns: dict
+        """
+        lst = [attr for attr in dir(self) if not callable(getattr(self, attr)) and not attr.startswith("__")]
+        d = dict()
+        for m in lst:
+            d[m] = eval('self.{}'.format(m))
+        return d
 
     def host_base_init(self, hostname):
         """
@@ -72,223 +93,174 @@ class HostBase(object):
 
         :param hostname: hostname before resolution
         """
-        self._is_localhost()
-        if hostname == 'localhost':
-            self.resolve_hostname(hostname)
-            log.debug('hostname -- < {} >'.format(hostname))
-            self.update_host_info()
+        log.info('Start host < {} > initialization...'.format(hostname))
+        self.resolve_hostname(hostname=hostname)
+        if self._is_localhost:
+            self._os_type = platform.system()
+            self._os_version = platform.version()
+
         else:
-            self.resolve_hostname(hostname)
-            log.debug('hostname -- < {} >'.format(hostname))
-            self.update_host_info()
+            self.is_pingable()
             self.is_reachable()
 
-    def is_localhost(self):
+    @staticmethod
+    def is_valid_hostname(hostname):
         """
-        Detect if provided host is a localhost
+        Validate hostname format
 
-        :return: True if localhost, False OW
+        :param hostname: hostname string
+        :return: True if valid, False OW
         """
-        log.debug('hostname is < {} >'.format(self._hostname))
-        if self._hostname == 'localhost' or self._ipaddr == '127.0.0.1':
-            self._is_localhost = True
-        else:
-            self._is_localhost = False
-        log.debug('_is_localhost = < {} >'.format(self._is_localhost))
-        return self._is_localhost
+        if len(hostname) > 255:
+            return False
+        if hostname[-1] == ".":
+            hostname = hostname[:-1]  # strip exactly one dot from the right, if present
+        allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
+        return all(allowed.match(x) for x in hostname.split("."))
 
-
-
-
-
-
-
-
-
-
-
-
-
-    @property
-    def os_version(self):
-        """Getter for os_version
-
-        :Parameters: none
-        :return: version of OS
-        :rtype: str
+    def resolve_hostname(self, hostname):
         """
-        if self._os_version is None:
-            self.update_host_info()
-        return self._os_version
+        Validate and resolve hostname and update relevant state vars
 
-    @os_version.setter
-    def os_version(self, value):
-        """Setter for os_version
-
-        :param value: new value to set to
-        :type value: str
-        :returns: None"""
-        self._os_version = value
-
-    @property
-    def os_type(self):
-        """Getter for os_type
-
-        :Parameters: none
-        :return: type of OS
-        :rtype: str
+        :param hostname:
+        :return:
         """
-        if self._os_type is None:
-            self.update_host_info()
-        return self._os_type
+        # check hostname is valid
+        if not self.is_valid_hostname(hostname=hostname):
+            log.exception('Invalid hostname < {} >!'.format(hostname))
+            raise pe.HostGeneralError('Invalid hostname < {} >!'.format(hostname))
 
-    @os_type.setter
-    def os_type(self, value):
-        """
-        Setter for os_type
+        # check IP is valid
+        try:
+            log.debug('try to resolve hostname < {} >'.format(hostname))
+            ip = ipaddress.ip_address(hostname)
+            self._ipaddr = hostname
+            log.debug('hostname successfully resolved as IP address < {} >'.format(self._ipaddr))
+            self._ipaddr_version = ip.version
+            log.debug('IP version < {} >'.format(self._ipaddr_version))
+            self._is_localhost = ip.is_loopback
+            log.debug('is IP a loopback -- < {} >'.format(self._is_localhost))
+        except ValueError as e:
+            log.debug('hostname failed to be resolved as an IP address. try to verify FQDN or localhost...')
+            try:
+                log.debug('try to resolve hostname < {} >'.format(hostname))
+                self._ipaddr = socket.gethostbyname(hostname)
+                log.debug('resolved IP address -- < {} >'.format(self._ipaddr))
+                ip = ipaddress.ip_address(self._ipaddr)
+                self._ipaddr_version = ip.version
+                log.debug('IP version < {} >'.format(self._ipaddr_version))
+                self._is_localhost = ip.is_loopback
+                log.debug('is IP a loopback -- < {} >'.format(self._is_localhost))
+            except socket.gaierror as e:
+                log.exception('Failed to resolve hostname < {} >!'.format(hostname, e))
+                raise pe.HostConnectivityError('Unable to resolve < {} >'.format(hostname))
 
-        :param value: new value to set to
-        :type value: str
-        :returns: None
-        """
-        self._os_type = value
-
-    def update_host_info(self):
-        """
-        Updates host OS type and version
-
-        :Parameters: none
-        :return: None
-        """
-
-        self._os_type = platform.system()
-        self._os_version = platform.version()
-
-    def is_reachable(self):
+    # @retry(pe.HostConnectivityError, tries=3, delay=2)
+    def is_reachable(self, __retry=False):
         """
         Test if the host is reachable by ping and ssh
 
         :returns: True if reachable, False OW
         """
-        if not self.is_pingable():
+        log.info('Verifying host < {} > is reachable over SSH...'.format(self._hostname))
+        p = self.run('echo')[0]
+        if p.rc:
+            log.critical('SSH to < {} > failed!'.format(self._hostname))
             self._is_reachable = False
-            return self._is_reachable
-        else:
-            # if ping succeeds, test ssh
-            # TODO: implement run()
-            rc = self.run('echo', timeout=5)
-            if rc:
-                log.debug('ssh to %s did not return for 5 seconds'.format(self._hostname))
-                self._is_reachable = False
-                return self._is_reachable
+            raise pe.HostConnectivityError('Failed to SSH host < {} >'.format(self._hostname))
         self._is_reachable = True
         return self._is_reachable
 
-    def is_pingable(self, pingretry=3):
+    @retry(pe.HostConnectivityError, tries=3, delay=2)
+    def is_pingable(self, __retry=False):
         """
         Test if the host is reachable by ping
 
         :returns: True if pingable, False OW
         """
-
-        for i in range(pingretry):
-            p = os.system('ping -c 1 -w 1 {} &>/dev/null'.format(self._ipaddr))
-            if p:
-                log.debug('ping to {0} failed with exit code {1}'.format(self._hostname, p))
-                if i != pingretry - 1:  # skip sleep if on last ping
-                    time.sleep(2)  # wait 2 seconds before next ping
+        log.info('Verifying host < {} > is pingable...'.format(self._hostname))
+        rc = os.system("ping -c 1 -W2 " + self._hostname + " > /dev/null 2>&1")
+        if rc == 0:
+            log.info('Host < {} > pinged successfully'.format(self._hostname))
+            self._is_pingable = True
+            return self._is_pingable
+        else:
+            log.warning('Failed to ping host < {} >'.format(self._hostname))
+            self._is_pingable = False
+            if __retry:
+                raise pe.HostConnectivityError('Failed to ping host < {} >'.format(self._hostname))
             else:
-                return True
-        return False
-
-    def resolve_hostname(self, hostname):
-        """
-        Resolve hostname and return IP
-
-        :param hostname:
-        :return:
-        """
-
-        try:
-            log.debug('try to resolve hostname < {} >'.format(hostname))
-            self._ipaddr = socket.gethostbyname(hostname)
-            log.debug('resolved IP address -- < {} >'.format(self._ipaddr))
-            self._hostname = socket.gethostbyaddr(hostname)[0]
-            log.debug('resolved hostname -- < {} >'.format(self._hostname))
-        except socket.gaierror as e:
-            log.exception('Failed to resolve hostname < {} >!'.format(hostname, e))
-            raise pe.HostConnectivityError('Unable to resolve < {} >'.format(hostname))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                return self._is_pingable
 
     # -------------------------------
     # Host Actions
 
-    # TODO: implement retry
+    @retry(Exception, tries=2, delay=2)
     def run(self, commands,
             blocking=True,
             timeout=0,
             ssh_timeout=0,
             verify_rc=False,
-            deque=None,
-            pid=None,
             print_stdout=False,
             print_pstate=False):
+        """
+        Execute shell command:
+        - remote host -- over SSH
+        - localhost -- over subprocess
 
-        p = pstate.Pstate(hostname=self._hostname)
-        p.ipaddr = self._ipaddr
+        :param commands:
+        :param blocking:
+        :param timeout:
+        :param ssh_timeout:
+        :param verify_rc:
+        :param pid:
+        :param print_stdout:
+        :param print_pstate:
+        :return: list of pstate objects (to support multiple commands in one session)
+        """
 
+        p_lst = list()
         if not self._is_localhost:
             client = self.__get_ssh_client(timeout=ssh_timeout)
+            if isinstance(commands, str):
+                commands = commands.split()
             for cmd in commands:
+                p = pstate.Pstate(hostname=self._hostname)
+                p.ipaddr = self._ipaddr
                 log.debug('executing command --> {}'.format(cmd))
                 p.epoch = calendar.timegm(time.gmtime())
                 start = time.time()
                 stdin, stdout, stderr = client.exec_command(cmd)
                 p.runtime = time.time() - start
                 p.cmd = cmd
-                p.stdout = stdout.read()
-                p.stderr = stderr.read()
+                p.stdout = stdout.read().decode(encoding='UTF-8')
+                p.stderr = stderr.read().decode(encoding='UTF-8')
                 p.rc = stdout.channel.recv_exit_status()
 
+                p_lst.append(p)
                 if print_pstate:
                     log.info('PSTATE:\n{}'.format(p.__str__()))
 
             client.close()
         else:
             for cmd in commands:
+                p = pstate.Pstate(hostname=self._hostname)
+                p.ipaddr = self._ipaddr
                 log.debug('executing command --> {}'.format(cmd))
                 p.epoch = calendar.timegm(time.gmtime())
                 start = time.time()
                 prc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 p.pid = prc.pid
                 p.cmd = cmd
+                p.rc = prc.returncode
                 # This should allow background (non blocking) execution !!!
                 # It's the caller's responsibility to call process.wait()
                 if not blocking:
                     return prc
 
-                if prc.stdout is not None:
+                if prc.stdout:
                     while True:
-                        line = prc.stdout.readline()
+                        line = prc.stdout.readline().decode(encoding='UTF-8')
                         # print line to screen
                         if print_stdout:
                             sys.stdout.write(line)
@@ -296,42 +268,25 @@ class HostBase(object):
                         if not line:
                             break
                         p.stdout.append(line.rstrip())
-                    prc.wait()
-                else:
-                    # Get stdout, stderr and rc
-                    try:
-                        prc_stdout, prc_stderr = prc.communicate()
-                    except Exception as e:
-                        # if we got an exception it probably means we were killed from the outside, so force rc=0
-                        log.exception('Exception during subprocess.Popen communicate()\n{}'.format(e))
-                        raise pe.HostCommandExecutionError('Exception during subprocess.Popen communicate()\n{}'
-                                                           .format(e))
-                    p.runtime = time.time() - start
-                    p.rc = prc.returncode
-                    if print_pstate:
-                        log.info('PSTATE:\n{}'.format(p.__str__()))
-        return p
 
+                if prc.stderr:
+                    while True:
+                        line = prc.stderr.readline().decode(encoding='UTF-8')
+                        # print line to screen
+                        if print_stdout:
+                            sys.stdout.write(line)
+                            sys.stdout.flush()
+                        if not line:
+                            break
+                        p.stderr.append(line.rstrip())
+                prc.wait()
+                p.runtime = time.time() - start
 
-                # # Handle stdout and stderr
-                # if stdout or deque is not None:
-                #     p.stderr = [l.rstrip() for l in prc.stderr.read().split('\n')]
-                # else:
-                #     p.stdout = [l.rstrip() for l in prc_stdout.split('\n')]
-                #     p.stderr = [l.rstrip() for l in prc_stderr.split('\n')]
-                #
-                # if p.stdout and not p.stdout[-1]:
-                #     p.stdout = p.stdout[:-1]
-                #
-                # if p.stderr and not p.stderr[-1]:
-                #     p.stderr = p.stderr[:-1]
+                p_lst.append(p)
+                if print_pstate:
+                    log.info('PSTATE:\n{}'.format(p.__str__()))
 
-
-
-
-
-
-
+        return p_lst
 
     def __get_ssh_client(self, timeout=10):
         """
