@@ -17,27 +17,27 @@ formatters:
 
 handlers:
     console:
-        class: pywork.logger.ColorizingStreamHandler
+        class: devopsipy.logger.ColorizingStreamHandler
         level: INFO
         formatter: default
         stream: ext://sys.stdout
 
     info_file_handler:
-        class: pywork.logger.FileHandlerInfo
+        class: devopsipy.logger.FileHandlerInfo
         level: INFO
         formatter: default
         max_bytes: 10485760 # 10MB
         backup_count: 10
 
     error_file_handler:
-        class: pywork.logger.FileHandlerError
+        class: devopsipy.logger.FileHandlerError
         level: ERROR
         formatter: default
         max_bytes: 10485760 # 10MB
         backup_count: 10
 
     debug_file_handler:
-        class: pywork.logger.FileHandlerDebug
+        class: devopsipy.logger.FileHandlerDebug
         level: DEBUG
         formatter: default
         max_bytes: 10485760 # 10MB

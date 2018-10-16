@@ -2,7 +2,7 @@
 
 import logger_test_1
 import logger_test_2
-from pywork import logger
+from devopsipy import logger
 
 
 def main():

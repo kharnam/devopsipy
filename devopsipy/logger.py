@@ -15,7 +15,7 @@ __author__ = 'sergey kharnam'
 
 
 import os
-from pywork import logger_const as lc, pywork_utils as pu
+from devopsipy import logger_const as lc, utils as pu
 import logging
 import logging.config
 from logging.handlers import RotatingFileHandler

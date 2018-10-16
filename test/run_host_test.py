@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from pywork import logger, host_base
+from devopsipy import logger, host_base
 
 
 def main():
