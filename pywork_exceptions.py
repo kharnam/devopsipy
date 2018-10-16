@@ -18,6 +18,16 @@ class PyworkException(Exception):
         log.exception(message)
 
 
+class HostGeneralError(Exception):
+    """
+    Host exception for misc issues
+    """
+    def __init__(self, message, errors=None):
+        super().__init__(message)
+        self.errors = errors
+        log.exception(message)
+
+
 class HostConnectivityError(Exception):
     """
     Host connectivity exception
