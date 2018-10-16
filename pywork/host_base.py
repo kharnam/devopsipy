@@ -24,10 +24,7 @@ from retry import retry
 import paramiko as pm
 
 # Pywork
-import pstate
-import pywork_exceptions as pe
-import pywork_decorators as pd
-import host_base_const as hbc
+from pywork import pstate, pywork_exceptions as pe, host_base_const as hbc
 
 
 class HostBase(object):

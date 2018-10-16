@@ -3,6 +3,9 @@ Module to contain logger related constants
 """
 __author__ = 'sergey kharnam'
 
+import os
+
+PYWORK_BASE = os.path.dirname(os.path.abspath(__file__))
 LOG_DIR_BASE = '/tmp/logs/'
 LOG_FILE_EXTENSION_INFO = '.info.log'
 LOG_FILE_EXTENSION_ERROR = '.error.log'
@@ -12,4 +15,4 @@ LOG_FILE_SYMLINK_ERROR = LOG_DIR_BASE + 'latest.error'
 LOG_FILE_SYMLINK_DEBUG = LOG_DIR_BASE + 'latest.debug'
 
 LOG_ENV_VAR_NAME = 'LOG_CFG'
-LOG_DEFAULT_CONFIG_PATH = './logger.yml'
+LOG_DEFAULT_CONFIG_PATH = PYWORK_BASE + '/logger.yml'

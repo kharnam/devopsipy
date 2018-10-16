@@ -15,14 +15,13 @@ __author__ = 'sergey kharnam'
 
 
 import os
-import logger_const as lc
+from pywork import logger_const as lc, pywork_utils as pu
 import logging
 import logging.config
 from logging.handlers import RotatingFileHandler
 import time
 import yaml
 import ctypes
-import pywork_utils as pu
 
 log_dir_path = str()
 logger_name = str()

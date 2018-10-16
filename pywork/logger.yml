@@ -17,27 +17,27 @@ formatters:
 
 handlers:
     console:
-        class: logger.ColorizingStreamHandler
+        class: pywork.logger.ColorizingStreamHandler
         level: INFO
         formatter: default
         stream: ext://sys.stdout
 
     info_file_handler:
-        class: logger.FileHandlerInfo
+        class: pywork.logger.FileHandlerInfo
         level: INFO
         formatter: default
         max_bytes: 10485760 # 10MB
         backup_count: 10
 
     error_file_handler:
-        class: logger.FileHandlerError
+        class: pywork.logger.FileHandlerError
         level: ERROR
         formatter: default
         max_bytes: 10485760 # 10MB
         backup_count: 10
 
     debug_file_handler:
-        class: logger.FileHandlerDebug
+        class: pywork.logger.FileHandlerDebug
         level: DEBUG
         formatter: default
         max_bytes: 10485760 # 10MB

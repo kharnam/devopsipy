@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-import logger
-import host_base
+from pywork import logger, host_base
 
 
 def main():

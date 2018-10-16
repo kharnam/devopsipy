@@ -11,7 +11,7 @@ import pickle
 import random
 import string
 from pathlib import Path
-import pywork_exceptions as pe
+from pywork import pywork_exceptions as pe
 
 import logging
 log = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ def create_symlinks_to_files(**data):
     :param data: {link1: file1, link2:file,...}
     """
     for link, file in data.items():
-        if os.path.isfile(link):
+        if os.path.islink(link):
             logging.debug('old symlink < {} > found. removing...'.format(file))
             os.remove(link)
         logging.debug('creating new symlink < {} > --> < {} >'.format(link, file))
