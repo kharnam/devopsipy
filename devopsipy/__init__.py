@@ -1,5 +1,5 @@
 #!/bin/env python3
-"""  Init Pywork module package  """
+"""  Init DevOpsiPy module package  """
 
 __author__ = 'sergey kharnam'
 

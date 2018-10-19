@@ -11,7 +11,7 @@ import pickle
 import random
 import string
 from pathlib import Path
-from devopsipy import exceptions as pe
+import exceptions as pe
 
 import logging
 log = logging.getLogger(__name__)

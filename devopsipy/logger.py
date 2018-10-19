@@ -15,7 +15,8 @@ __author__ = 'sergey kharnam'
 
 
 import os
-from devopsipy import logger_const as lc, utils as pu
+import logger_const as lc
+import utils as pu
 import logging
 import logging.config
 from logging.handlers import RotatingFileHandler
