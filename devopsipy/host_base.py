@@ -19,12 +19,14 @@ import subprocess
 import ipaddress
 from pathlib import Path
 
-# PyPy
+# PyPi
 from retry import retry
 import paramiko as pm
 
-# Pywork
-from devopsipy import pstate, exceptions as pe, host_base_const as hbc
+# DevOpsiPy
+import pstate
+import exceptions as pe
+import host_base_const as hbc
 
 
 class HostBase(object):
@@ -217,10 +219,10 @@ class HostBase(object):
         """
 
         p_lst = list()
+        if isinstance(commands, str):
+            commands = commands.split()
         if not self._is_localhost:
             client = self.__get_ssh_client(timeout=ssh_timeout)
-            if isinstance(commands, str):
-                commands = commands.split()
             for cmd in commands:
                 p = pstate.Pstate(hostname=self._hostname)
                 p.ipaddr = self._ipaddr
