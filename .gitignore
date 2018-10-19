@@ -1,3 +1,4 @@
 .env
 .idea
+.terraform
 __pycache__
