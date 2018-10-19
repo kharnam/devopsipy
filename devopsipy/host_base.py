@@ -251,7 +251,6 @@ class HostBase(object):
                 prc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 p.pid = prc.pid
                 p.cmd = cmd
-                p.rc = prc.returncode
                 # This should allow background (non blocking) execution !!!
                 # It's the caller's responsibility to call process.wait()
                 if not blocking:
@@ -279,6 +278,8 @@ class HostBase(object):
                             break
                         p.stderr.append(line.rstrip())
                 prc.wait()
+                p.rc = prc.returncode
+                print('p.rc --> ', p.rc)
                 p.runtime = time.time() - start
 
                 p_lst.append(p)
