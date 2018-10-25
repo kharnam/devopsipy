@@ -194,6 +194,7 @@ class HostBase(object):
     # -------------------------------
     # Host Actions
 
+    # TODO: Concurrency with AsyncIO
     @retry(Exception, tries=2, delay=2)
     def run(self, commands,
             blocking=True,
@@ -220,7 +221,7 @@ class HostBase(object):
 
         p_lst = list()
         if isinstance(commands, str):
-            commands = commands.split()
+            commands = [commands]
         if not self._is_localhost:
             client = self.__get_ssh_client(timeout=ssh_timeout)
             for cmd in commands:
@@ -279,7 +280,6 @@ class HostBase(object):
                         p.stderr.append(line.rstrip())
                 prc.wait()
                 p.rc = prc.returncode
-                print('p.rc --> ', p.rc)
                 p.runtime = time.time() - start
 
                 p_lst.append(p)
